@@ -1,28 +1,57 @@
 package com.example;
 
+import javax.swing.*;
+import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 public class LogbookToExcelApp {
 
-    public static void main(String[] args) throws Exception {
-        if (args.length < 2) {
-            System.err.println("Usage: <input-log-file> <output-xlsx-file>");
+    public static void main(String[] args) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose logbook log file");
+
+        int result = chooser.showOpenDialog(null);
+        if (result != JFileChooser.APPROVE_OPTION) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "No file selected.",
+                    "Cancelled",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
             return;
         }
 
-        Path input = Paths.get(args[0]);
-        Path output = Paths.get(args[1]);
+        File inputFile = chooser.getSelectedFile();
+        Path input = inputFile.toPath();
 
-        LogbookParser parser = new LogbookParser();
-        List<LogbookRecord> records = parser.parse(input);
+        String fileName = inputFile.getName();
+        int dot = fileName.lastIndexOf('.');
+        String baseName = dot > 0 ? fileName.substring(0, dot) : fileName;
+        Path output = inputFile.toPath()
+                .getParent()
+                .resolve(baseName + ".xlsx");
 
-        System.out.println("Parsed records: " + records.size());
+        try {
+            LogbookParser parser = new LogbookParser();
+            List<LogbookRecord> records = parser.parse(input);
 
-        ExcelWriter writer = new ExcelWriter();
-        writer.write(records, output);
+            ExcelWriter writer = new ExcelWriter();
+            writer.write(records, output);
 
-        System.out.println("Done: " + output.toAbsolutePath());
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Excel file saved successfully:\n" + output.toAbsolutePath(),
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Failed to process file:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 }
