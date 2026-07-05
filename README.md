@@ -56,7 +56,7 @@ jpackage ^
   --input jpackage-input ^
   --main-jar LogbookExtractor.jar ^
   --main-class com.example.LogbookToExcelApp ^
-  --dest jpackage-dist ^
+  --dest jpackage-dest ^
   --win-console
 ```
 
