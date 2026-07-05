@@ -182,9 +182,6 @@ public class LogbookParser {
 
                 // Attach errors that may be in payload lines (e.g. JSON with "ERROR")
                 if (content.contains("\"ERROR\"") || content.contains("\"message\":\"ERROR\"") || content.toLowerCase().contains("error")) {
-                    if (record.getRequestId().equals("917dc8faed55f506")) {
-                        System.out.println(trimmed);
-                    }
                     record.addError(content);
                 }
 
