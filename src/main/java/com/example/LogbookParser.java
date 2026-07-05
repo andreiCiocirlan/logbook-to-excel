@@ -56,7 +56,7 @@ public class LogbookParser {
                 String content = trimmed.substring(2).trim();
                 if (content.startsWith("correlation-id:")) {
                     String correlationId = valueAfterColon(content);
-                    if (requestId != null && !requestId.isEmpty() && correlationId != null && !correlationId.isEmpty()) {
+                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
                         requestIdToCorrelationId.put(requestId, correlationId);
                     }
                     // we can break because correlation-id appears at most once per request block
@@ -101,7 +101,7 @@ public class LogbookParser {
                 // if correlation-id discovered here, record it and update mapping
                 if (content.startsWith("correlation-id:")) {
                     correlationId = valueAfterColon(content);
-                    if (correlationId != null && !correlationId.isEmpty()) {
+                    if (!correlationId.isEmpty()) {
                         record.setCorrelationId(correlationId);
                         requestIdToCorrelationId.put(requestId, correlationId);
                     }
@@ -173,7 +173,7 @@ public class LogbookParser {
                 // if the response contains a correlation-id header for some reason, keep it in sync
                 if (content.startsWith("correlation-id:")) {
                     String correlationId = valueAfterColon(content);
-                    if (correlationId != null && !correlationId.isEmpty()) {
+                    if (!correlationId.isEmpty()) {
                         record.setCorrelationId(correlationId);
                         requestIdToCorrelationId.put(requestId, correlationId);
                     }
