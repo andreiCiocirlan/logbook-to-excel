@@ -65,7 +65,7 @@ jpackage ^
 After packaging completes, the output will be placed in:
 
 ```text
-jpackage-dist/logbook-to-excel
+jpackage-dest/logbook-to-excel
 ```
 
 Inside that folder, run:
@@ -78,7 +78,7 @@ logbook-to-excel.exe
 
 - Do not point `--input` to the same folder used for `--dest`.
 - If you change the main class package name, update the `--main-class` value.
-- If you want to redistribute the app, zip the entire `jpackage-dist/logbook-to-excel` folder, not only the `.exe`.
+- If you want to redistribute the app, zip the entire `jpackage-dest/logbook-to-excel` folder, not only the `.exe`.
 
 ## How it works
 
