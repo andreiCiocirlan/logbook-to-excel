@@ -277,7 +277,6 @@ public class LogbookParser {
         return parts.length > 0 ? parts[0] : "";
     }
 
-    // original detection helpers
     private boolean isIncomingRequestLine(String line) {
         return line != null
                && line.contains("Logbook")
