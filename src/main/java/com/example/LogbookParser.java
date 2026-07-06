@@ -50,10 +50,15 @@ public class LogbookParser {
             while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
                 String trimmed = lines.get(i).trim();
                 i++;
-                if (!trimmed.startsWith("+[")) {
-                    continue;
+
+                // strip optional "+[" prefix if present
+                String content;
+                if (trimmed.startsWith("+[")) {
+                    content = trimmed.substring(2).trim();
+                } else {
+                    content = trimmed;
                 }
-                String content = trimmed.substring(2).trim();
+
                 if (content.startsWith("correlation-id:")) {
                     String correlationId = valueAfterColon(content);
                     if (!requestId.isEmpty() && !correlationId.isEmpty()) {
@@ -93,10 +98,14 @@ public class LogbookParser {
             while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
                 String trimmed = lines.get(i).trim();
                 i++;
-                if (!trimmed.startsWith("+[")) {
-                    continue;
+
+                // strip optional "+[" prefix if present
+                String content;
+                if (trimmed.startsWith("+[")) {
+                    content = trimmed.substring(2).trim();
+                } else {
+                    content = trimmed;
                 }
-                String content = trimmed.substring(2).trim();
 
                 // if correlation-id discovered here, record it and update mapping
                 if (content.startsWith("correlation-id:")) {
@@ -165,10 +174,14 @@ public class LogbookParser {
             while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
                 String trimmed = lines.get(i).trim();
                 i++;
-                if (!trimmed.startsWith("+[")) {
-                    continue;
+
+                // strip optional "+[" prefix if present
+                String content;
+                if (trimmed.startsWith("+[")) {
+                    content = trimmed.substring(2).trim();
+                } else {
+                    content = trimmed;
                 }
-                String content = trimmed.substring(2).trim();
 
                 // if the response contains a correlation-id header for some reason, keep it in sync
                 if (content.startsWith("correlation-id:")) {
