@@ -3,12 +3,15 @@ package com.example;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.LinkPermission;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LogbookParser {
 
@@ -151,6 +154,9 @@ public class LogbookParser {
             }
 
             String correlationId = extractCorrelationIdFromError(trimmed);
+            if (correlationId == null) {
+                correlationId = extractCorrelationIdFromError2(trimmed);
+            }
             if (correlationId == null || correlationId.isEmpty()) {
                 continue;
             }
@@ -431,6 +437,16 @@ public class LogbookParser {
         }
 
         return null;
+    }
+
+
+    // Second attempt to extract correlationId from error line
+    // [correlationId        otherId]
+    // use regex correlation id is after "[" and before 2 or more spaces
+    private String extractCorrelationIdFromError2(String content) {
+        Matcher matcher = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})").matcher(content);
+
+        return matcher.find() ? matcher.group(1) : null;
     }
 
     private boolean isCorrelationId(String value) {
