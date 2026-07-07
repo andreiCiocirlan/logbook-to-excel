@@ -29,6 +29,12 @@ public class LogbookParser {
         parseErrors(lines);                       // third pass: attach errors based on correlation id
         parseOutgoingResponses(lines);            // fourth pass: attach response details per request
 
+        // filter out actuator endpoints
+        recordsByRequestId.entrySet().removeIf(entry -> {
+            String endpoint = entry.getValue().getHeaders().get("endpoint");
+            return endpoint != null && endpoint.contains("actuator/health");
+        });
+
         return new ArrayList<>(recordsByRequestId.values());
     }
 
@@ -61,6 +67,13 @@ public class LogbookParser {
 
                 if (content.startsWith("correlation-id:")) {
                     String correlationId = valueAfterColon(content);
+                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
+                        requestIdToCorrelationId.put(requestId, correlationId);
+                    }
+                    // we can break because correlation-id appears at most once per request block
+                    break;
+                } else if (content.startsWith("tracestate: in=")) {
+                    String correlationId = etractTraceStateCorrelationId(content);
                     if (!requestId.isEmpty() && !correlationId.isEmpty()) {
                         requestIdToCorrelationId.put(requestId, correlationId);
                     }
@@ -112,6 +125,12 @@ public class LogbookParser {
                     correlationId = valueAfterColon(content);
                     if (!correlationId.isEmpty()) {
                         record.setCorrelationId(correlationId);
+                        requestIdToCorrelationId.put(requestId, correlationId);
+                    }
+                    continue;
+                } else if (content.startsWith("tracestate: in=")) {
+                    correlationId = etractTraceStateCorrelationId(content);
+                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
                         requestIdToCorrelationId.put(requestId, correlationId);
                     }
                     continue;
@@ -188,6 +207,12 @@ public class LogbookParser {
                     String correlationId = valueAfterColon(content);
                     if (!correlationId.isEmpty()) {
                         record.setCorrelationId(correlationId);
+                        requestIdToCorrelationId.put(requestId, correlationId);
+                    }
+                    continue;
+                } else if (content.startsWith("tracestate: in=")) {
+                    String correlationId = etractTraceStateCorrelationId(content);
+                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
                         requestIdToCorrelationId.put(requestId, correlationId);
                     }
                     continue;
@@ -303,7 +328,7 @@ public class LogbookParser {
     }
 
     private boolean isNextTimestampLine(String line) {
-        return line != null && line.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}.*");
+        return line != null && (line.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}.*") || line.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}.*"));
     }
 
     private String extractTimestamp(String line) {
@@ -325,6 +350,17 @@ public class LogbookParser {
         }
 
         return "";
+    }
+
+    private String etractTraceStateCorrelationId(String input) {
+        int start = input.indexOf("=");
+        int end = input.indexOf(";");
+
+        if (start == -1 || end == -1) {
+            return "";
+        }
+
+        return input.substring(start + 1, end).trim();
     }
 
     private String valueAfterColon(String line) {
