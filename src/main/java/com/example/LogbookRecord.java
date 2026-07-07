@@ -27,6 +27,6 @@ public class LogbookRecord {
     }
 
     public String getError() {
-        return String.join(" | ", errors);
+        return String.join("\r\n", errors);
     }
 }

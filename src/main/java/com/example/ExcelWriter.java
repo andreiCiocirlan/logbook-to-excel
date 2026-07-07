@@ -55,7 +55,7 @@ public class ExcelWriter {
                 set(row, 7, record.getHeaders().get("Content-Type"));
                 set(row, 8, record.getHeaders().get("user-agent"));
                 set(row, 9, record.getHeaders().get("Duration"));
-                set(row, 10, compactError(record.getError()));
+                set(row, 10, record.getError());
             }
 
             try (OutputStream os = Files.newOutputStream(outputFile)) {
@@ -80,16 +80,6 @@ public class ExcelWriter {
         } catch (NumberFormatException e) {
             cell.setCellValue(value);
         }
-    }
-
-    private String compactError(String error) {
-        if (error == null) {
-            return "";
-        }
-        return error.replace("\r", " ")
-                .replace("\n", " | ")
-                .replaceAll("\\s+", " ")
-                .trim();
     }
 
     private int widthFor(String text) {
