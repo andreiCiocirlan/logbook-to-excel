@@ -311,8 +311,6 @@ public class LogbookParser {
             s = s.substring(0, httpIndex).trim();
         }
 
-        s = stripMarkdownLink(s);
-
         try {
             URI uri = new URI(s);
             record.putHeader("http_method", method);
@@ -389,18 +387,6 @@ public class LogbookParser {
             return "";
         }
         return line.substring(colon + 1).trim();
-    }
-
-    private String stripMarkdownLink(String value) {
-        String s = value.trim();
-        int markdownStart = s.indexOf("](");
-        if (s.startsWith("[") && markdownStart > 0) {
-            int markdownEnd = s.indexOf(")", markdownStart);
-            if (markdownEnd > markdownStart) {
-                return s.substring(markdownStart + 2, markdownEnd).trim();
-            }
-        }
-        return s;
     }
 
     private String[] extractBracketParts(String line) {
