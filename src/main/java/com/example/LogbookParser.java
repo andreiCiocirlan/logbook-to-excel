@@ -3,7 +3,6 @@ package com.example;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.LinkPermission;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -196,6 +195,8 @@ public class LogbookParser {
 
             i++;
 
+            String lastBodyLine = null;
+
             while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
                 String trimmed = lines.get(i).trim();
                 i++;
@@ -225,11 +226,24 @@ public class LogbookParser {
                 }
 
                 // Attach errors that may be in payload lines (e.g. JSON with "ERROR")
-                if (content.contains("\"ERROR\"") || content.contains("\"message\":\"ERROR\"") || content.toLowerCase().contains("error")) {
+                if (content.toLowerCase().contains("error")) {
                     record.addError(content);
                 }
 
+                if (!content.isEmpty() && (content.startsWith("{") || content.startsWith("["))) { // look for json type responses
+                    lastBodyLine = content; // once exiting the while loop lastBodyLine will be the response body
+                }
+
                 applyResponseLine(record, content);
+            }
+
+            // After parsing the block, check if the status is a non-2xx failure
+            String statusStr = record.getHeaders().get("status");
+            boolean nonSuccessfulResponse = statusStr != null && !statusStr.isEmpty() && !statusStr.startsWith("2");
+            if (nonSuccessfulResponse) {
+                if (lastBodyLine != null) {
+                    record.addError(lastBodyLine);
+                }
             }
         }
     }
