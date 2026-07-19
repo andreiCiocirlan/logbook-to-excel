@@ -74,7 +74,7 @@ public class LogbookParser {
                     // we can break because correlation-id appears at most once per request block
                     break;
                 } else if (content.startsWith("tracestate: in=")) {
-                    String traceId = etractTraceStateTraceId(content);
+                    String traceId = extractTraceStateTraceId(content);
                     if (!requestId.isEmpty() && !traceId.isEmpty()) {
                         requestIdToTraceId.put(requestId, traceId);
                     }
@@ -125,7 +125,7 @@ public class LogbookParser {
                     }
                     continue;
                 } else if (content.startsWith("tracestate: in=")) {
-                    traceId = etractTraceStateTraceId(content);
+                    traceId = extractTraceStateTraceId(content);
                     if (!requestId.isEmpty() && !traceId.isEmpty()) {
                         requestIdToTraceId.put(requestId, traceId);
                     }
@@ -204,7 +204,7 @@ public class LogbookParser {
                     }
                     continue;
                 } else if (content.startsWith("tracestate: in=")) {
-                    String traceId = etractTraceStateTraceId(content);
+                    String traceId = extractTraceStateTraceId(content);
                     if (!requestId.isEmpty() && !traceId.isEmpty()) {
                         requestIdToTraceId.put(requestId, traceId);
                     }
@@ -343,7 +343,7 @@ public class LogbookParser {
         return "";
     }
 
-    private String etractTraceStateTraceId(String input) {
+    private String extractTraceStateTraceId(String input) {
         int start = input.indexOf("=");
         int end = input.indexOf(";");
 
