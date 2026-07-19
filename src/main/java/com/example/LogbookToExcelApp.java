@@ -30,7 +30,7 @@ public class LogbookToExcelApp {
 
         JDialog loadingDialog = createLoadingDialog();
 
-        new Thread(() -> {
+        Thread.startVirtualThread(() -> {
             StringBuilder summary = new StringBuilder();
             try {
                 LogbookParser parser = new LogbookParser();
@@ -83,7 +83,7 @@ public class LogbookToExcelApp {
                     );
                 });
             }
-        }).start();
+        });
 
         loadingDialog.setVisible(true);
     }
