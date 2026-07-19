@@ -61,12 +61,7 @@ public class LogbookParser {
                 i++;
 
                 // strip optional "+[" prefix if present
-                String content;
-                if (trimmed.startsWith("+[")) {
-                    content = trimmed.substring(2).trim();
-                } else {
-                    content = trimmed;
-                }
+                String content = normalizeContent(lines.get(i));
 
                 if (content.startsWith("correlation-id:")) {
                     String traceId = valueAfterColon(content);
@@ -116,12 +111,7 @@ public class LogbookParser {
                 i++;
 
                 // strip optional "+[" prefix if present
-                String content;
-                if (trimmed.startsWith("+[")) {
-                    content = trimmed.substring(2).trim();
-                } else {
-                    content = trimmed;
-                }
+                String content = normalizeContent(lines.get(i));
 
                 // if correlation-id discovered here, record it and update mapping
                 if (content.startsWith("correlation-id:")) {
@@ -200,12 +190,7 @@ public class LogbookParser {
                 i++;
 
                 // strip optional "+[" prefix if present
-                String content;
-                if (trimmed.startsWith("+[")) {
-                    content = trimmed.substring(2).trim();
-                } else {
-                    content = trimmed;
-                }
+                String content = normalizeContent(lines.get(i));
 
                 // if the response contains a correlation-id header for some reason, keep it in sync
                 if (content.startsWith("correlation-id:")) {
@@ -244,6 +229,13 @@ public class LogbookParser {
                 }
             }
         }
+    }
+
+    private String normalizeContent(String line) {
+        String trimmed = line.trim();
+        return trimmed.startsWith("+[")
+                ? trimmed.substring(2).trim()
+                : trimmed;
     }
 
     private void applyRequestLine(LogbookRecord record, String content) {
