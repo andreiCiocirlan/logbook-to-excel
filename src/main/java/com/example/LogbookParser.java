@@ -415,15 +415,6 @@ public class LogbookParser {
     }
 
 
-    // Second attempt to extract traceId from error line
-    // [traceId        otherId]
-    // use regex trace id is after "[" and before 2 or more spaces
-    private String extractTraceIdFromError2(String content) {
-        Matcher matcher = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})").matcher(content);
-
-        return matcher.find() ? matcher.group(1) : null;
-    }
-
     private boolean isTraceId(String value) {
         return value != null && value.matches("[a-fA-F0-9\\-]{8,}"); // basic heuristic, adjust to your ids
     }
