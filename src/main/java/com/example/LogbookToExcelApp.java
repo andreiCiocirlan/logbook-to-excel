@@ -9,7 +9,8 @@ public class LogbookToExcelApp {
 
     public static void main(String[] args) {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Choose logbook log file");
+        chooser.setDialogTitle("Choose logbook log file(s)");
+        chooser.setMultiSelectionEnabled(true);
 
         int result = chooser.showOpenDialog(null);
         if (result != JFileChooser.APPROVE_OPTION) {
@@ -22,45 +23,54 @@ public class LogbookToExcelApp {
             return;
         }
 
-        File inputFile = chooser.getSelectedFile();
-        Path input = inputFile.toPath();
+        File[] inputFiles = chooser.getSelectedFiles();
 
-        String fileName = inputFile.getName();
-        int dot = fileName.lastIndexOf('.');
-        String baseName = dot > 0 ? fileName.substring(0, dot) : fileName;
-        Path output = inputFile.toPath()
-                .getParent()
-                .resolve(baseName + ".xlsx");
+        LogbookParser parser = new LogbookParser();
+        ExcelWriter writer = new ExcelWriter();
 
-        try {
-            LogbookParser parser = new LogbookParser();
-            List<LogbookRecord> records = parser.parse(input);
+        StringBuilder summary = new StringBuilder();
 
-            if (records.isEmpty()) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Couldn't find any Logbook requests for log file: " + fileName + ". Make sure the log file contains Incoming Request/Outgoing Response",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
-            } else {
-                ExcelWriter writer = new ExcelWriter();
+        for (File inputFile : inputFiles) {
+            Path input = inputFile.toPath();
+
+            String fileName = inputFile.getName();
+            int dot = fileName.lastIndexOf('.');
+            String baseName = dot > 0 ? fileName.substring(0, dot) : fileName;
+
+            Path output = input.getParent().resolve(baseName + ".xlsx");
+
+            try {
+                List<LogbookRecord> records = parser.parse(input);
+
+                if (records.isEmpty()) {
+                    summary.append("❌ ")
+                            .append(fileName)
+                            .append(": No Logbook requests found.\n");
+                    continue;
+                }
+
                 writer.write(records, output);
 
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Excel file saved successfully:\n" + output.toAbsolutePath(),
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
+                summary.append("✅ ")
+                        .append(fileName)
+                        .append(" -> ")
+                        .append(output.getFileName())
+                        .append('\n');
+
+            } catch (Exception e) {
+                summary.append("❌ ")
+                        .append(fileName)
+                        .append(": ")
+                        .append(e.getMessage())
+                        .append('\n');
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Failed to process file:\n" + e.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
         }
+
+        JOptionPane.showMessageDialog(
+                null,
+                summary.toString(),
+                "Finished",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 }
