@@ -27,7 +27,7 @@ public class LogbookParser {
         requestIdToTraceId.clear();
         recordsByRequestId.clear();
 
-        buildRequestIdToTraceId(lines);     // first pass: gather requestId -> traceId
+        buildRequestIdToTraceId(lines);           // first pass: gather requestId -> traceId
         parseIncomingRequests(lines);             // second pass: populate incoming details per request
         parseErrors(lines);                       // third pass: attach errors based on trace id
         parseOutgoingResponses(lines);            // fourth pass: attach response details per request
@@ -246,7 +246,6 @@ public class LogbookParser {
         }
     }
 
-    // ---------------- helpers and existing logic (kept / slightly adapted) ----------------
     private void applyRequestLine(LogbookRecord record, String content) {
         if (content.startsWith("Remote:")) {
             record.putHeader("Remote", valueAfterColon(content));
