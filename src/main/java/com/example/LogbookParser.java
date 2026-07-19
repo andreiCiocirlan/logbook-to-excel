@@ -16,6 +16,7 @@ public class LogbookParser {
 
     private static final List<String> HTTP_METHODS = List.of("GET", "POST", "PUT", "DELETE", "PATCH");
     private static final Pattern TRACE_ID_PATTERN = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})");
+    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}\\.\\d{3}.*");
 
     // primary mapping: requestId -> traceId
     private final Map<String, String> requestIdToTraceId = new LinkedHashMap<>();
@@ -318,7 +319,7 @@ public class LogbookParser {
     }
 
     private boolean isNextTimestampLine(String line) {
-        return line != null && (line.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}.*") || line.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}.*"));
+        return line != null && TIMESTAMP_PATTERN.matcher(line).matches();
     }
 
     private String extractTimestamp(String line) {
