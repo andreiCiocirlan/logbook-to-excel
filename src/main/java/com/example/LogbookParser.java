@@ -109,11 +109,14 @@ public class LogbookParser {
 
             i++;
 
-            while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
-                i++;
+            while (i < lines.size()) {
+                String content = normalizeContent(lines.get(i)); // strip optional "+[" prefix if present
 
-                // strip optional "+[" prefix if present
-                String content = normalizeContent(lines.get(i));
+                if (isNextTimestampLine(content)) {
+                    break;
+                }
+
+                i++;
 
                 // if correlation-id discovered here, record it and update mapping
                 if (content.startsWith("correlation-id:")) {
@@ -187,11 +190,14 @@ public class LogbookParser {
 
             String lastBodyLine = null;
 
-            while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
-                i++;
+            while (i < lines.size()) {
+                String content = normalizeContent(lines.get(i)); // strip optional "+[" prefix if present
 
-                // strip optional "+[" prefix if present
-                String content = normalizeContent(lines.get(i));
+                if (isNextTimestampLine(content)) {
+                    break;
+                }
+
+                i++;
 
                 // if the response contains a correlation-id header for some reason, keep it in sync
                 if (content.startsWith("correlation-id:")) {
