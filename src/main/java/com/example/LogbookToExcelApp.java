@@ -36,15 +36,24 @@ public class LogbookToExcelApp {
             LogbookParser parser = new LogbookParser();
             List<LogbookRecord> records = parser.parse(input);
 
-            ExcelWriter writer = new ExcelWriter();
-            writer.write(records, output);
+            if (records.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Couldn't find any Logbook requests for log file: " + fileName + ". Make sure the log file contains Incoming Request/Outgoing Response",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            } else {
+                ExcelWriter writer = new ExcelWriter();
+                writer.write(records, output);
 
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Excel file saved successfully:\n" + output.toAbsolutePath(),
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Excel file saved successfully:\n" + output.toAbsolutePath(),
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(
                     null,
