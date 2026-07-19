@@ -9,7 +9,7 @@ import java.util.*;
 @Getter
 public class LogbookRecord {
     private String requestId;
-    private String correlationId;
+    private String traceId;
     private String timestamp;
     private final Set<String> errors = new HashSet<>();
     private final LinkedHashMap<String, String> headers = new LinkedHashMap<>();

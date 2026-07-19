@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 
 public class LogbookParser {
 
-    // primary mapping: requestId -> correlationId
-    private final Map<String, String> requestIdToCorrelationId = new LinkedHashMap<>();
+    // primary mapping: requestId -> traceId
+    private final Map<String, String> requestIdToTraceId = new LinkedHashMap<>();
 
     // primary records keyed by requestId (one row per request)
     private final Map<String, LogbookRecord> recordsByRequestId = new LinkedHashMap<>();
@@ -23,10 +23,10 @@ public class LogbookParser {
     public List<LogbookRecord> parse(Path logFile) throws IOException {
         List<String> lines = Files.readAllLines(logFile);
 
-        requestIdToCorrelationId.clear();
+        requestIdToTraceId.clear();
         recordsByRequestId.clear();
 
-        buildRequestIdToCorrelationId(lines);     // first pass: gather requestId -> correlationId
+        buildRequestIdToTraceId(lines);     // first pass: gather requestId -> traceId
         parseIncomingRequests(lines);             // second pass: populate incoming details per request
         parseErrors(lines);                       // third pass: attach errors based on correlation id
         parseOutgoingResponses(lines);            // fourth pass: attach response details per request
@@ -41,8 +41,8 @@ public class LogbookParser {
     }
 
     // --- FIRST PASS -----------------------------------------------------
-    // Find Incoming Request blocks and read correlation-id (if present) to build requestIdToCorrelationId.
-    private void buildRequestIdToCorrelationId(List<String> lines) {
+    // Find Incoming Request blocks and read correlation-id (if present) to build requestIdToTraceId.
+    private void buildRequestIdToTraceId(List<String> lines) {
         int i = 0;
         while (i < lines.size()) {
             String line = lines.get(i);
@@ -68,16 +68,16 @@ public class LogbookParser {
                 }
 
                 if (content.startsWith("correlation-id:")) {
-                    String correlationId = valueAfterColon(content);
-                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
-                        requestIdToCorrelationId.put(requestId, correlationId);
+                    String traceId = valueAfterColon(content);
+                    if (!requestId.isEmpty() && !traceId.isEmpty()) {
+                        requestIdToTraceId.put(requestId, traceId);
                     }
                     // we can break because correlation-id appears at most once per request block
                     break;
                 } else if (content.startsWith("tracestate: in=")) {
-                    String correlationId = etractTraceStateCorrelationId(content);
-                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
-                        requestIdToCorrelationId.put(requestId, correlationId);
+                    String traceId = etractTraceStateTraceId(content);
+                    if (!requestId.isEmpty() && !traceId.isEmpty()) {
+                        requestIdToTraceId.put(requestId, traceId);
                     }
                     // we can break because correlation-id appears at most once per request block
                     break;
@@ -99,14 +99,14 @@ public class LogbookParser {
 
             String timestamp = extractTimestamp(line);
             String requestId = extractRequestId(line);
-            String correlationId = requestIdToCorrelationId.get(requestId);
+            String traceId = requestIdToTraceId.get(requestId);
 
             LogbookRecord record = getOrCreateByRequestId(requestId);
             if (record.getTimestamp() == null) {
                 record.setTimestamp(timestamp);
             }
             record.setRequestId(requestId);
-            record.setCorrelationId(correlationId);
+            record.setTraceId(traceId);
 
             i++;
 
@@ -124,16 +124,16 @@ public class LogbookParser {
 
                 // if correlation-id discovered here, record it and update mapping
                 if (content.startsWith("correlation-id:")) {
-                    correlationId = valueAfterColon(content);
-                    if (!correlationId.isEmpty()) {
-                        record.setCorrelationId(correlationId);
-                        requestIdToCorrelationId.put(requestId, correlationId);
+                    traceId = valueAfterColon(content);
+                    if (!traceId.isEmpty()) {
+                        record.setTraceId(traceId);
+                        requestIdToTraceId.put(requestId, traceId);
                     }
                     continue;
                 } else if (content.startsWith("tracestate: in=")) {
-                    correlationId = etractTraceStateCorrelationId(content);
-                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
-                        requestIdToCorrelationId.put(requestId, correlationId);
+                    traceId = etractTraceStateTraceId(content);
+                    if (!requestId.isEmpty() && !traceId.isEmpty()) {
+                        requestIdToTraceId.put(requestId, traceId);
                     }
                     continue;
                 }
@@ -152,17 +152,17 @@ public class LogbookParser {
                 continue;
             }
 
-            String correlationId = extractCorrelationIdFromError(trimmed);
-            if (correlationId == null) {
-                correlationId = extractCorrelationIdFromError2(trimmed);
+            String traceId = extractTraceIdFromError(trimmed);
+            if (traceId == null) {
+                traceId = extractTraceIdFromError2(trimmed);
             }
-            if (correlationId == null || correlationId.isEmpty()) {
+            if (traceId == null || traceId.isEmpty()) {
                 continue;
             }
 
             // attach error to every requestId that maps to this correlation id
-            for (Entry<String, String> e : requestIdToCorrelationId.entrySet()) {
-                if (correlationId.equals(e.getValue())) {
+            for (Entry<String, String> e : requestIdToTraceId.entrySet()) {
+                if (traceId.equals(e.getValue())) {
                     LogbookRecord record = recordsByRequestId.get(e.getKey());
                     if (record != null) {
                         record.addError(trimmed);
@@ -191,7 +191,7 @@ public class LogbookParser {
                 record.setTimestamp(timestamp);
             }
             record.setRequestId(requestId);
-            record.setCorrelationId(requestIdToCorrelationId.get(requestId));
+            record.setTraceId(requestIdToTraceId.get(requestId));
 
             i++;
 
@@ -211,16 +211,16 @@ public class LogbookParser {
 
                 // if the response contains a correlation-id header for some reason, keep it in sync
                 if (content.startsWith("correlation-id:")) {
-                    String correlationId = valueAfterColon(content);
-                    if (!correlationId.isEmpty()) {
-                        record.setCorrelationId(correlationId);
-                        requestIdToCorrelationId.put(requestId, correlationId);
+                    String traceId = valueAfterColon(content);
+                    if (!traceId.isEmpty()) {
+                        record.setTraceId(traceId);
+                        requestIdToTraceId.put(requestId, traceId);
                     }
                     continue;
                 } else if (content.startsWith("tracestate: in=")) {
-                    String correlationId = etractTraceStateCorrelationId(content);
-                    if (!requestId.isEmpty() && !correlationId.isEmpty()) {
-                        requestIdToCorrelationId.put(requestId, correlationId);
+                    String traceId = etractTraceStateTraceId(content);
+                    if (!requestId.isEmpty() && !traceId.isEmpty()) {
+                        requestIdToTraceId.put(requestId, traceId);
                     }
                     continue;
                 }
@@ -370,7 +370,7 @@ public class LogbookParser {
         return "";
     }
 
-    private String etractTraceStateCorrelationId(String input) {
+    private String etractTraceStateTraceId(String input) {
         int start = input.indexOf("=");
         int end = input.indexOf(";");
 
@@ -408,7 +408,7 @@ public class LogbookParser {
     // Attempt to extract a correlation-id from an ERROR line using bracketed parts.
     // Returns the first bracketed part that looks like a correlation id (hex-ish) from positions 1 or 2,
     // otherwise returns null.
-    private String extractCorrelationIdFromError(String line) {
+    private String extractTraceIdFromError(String line) {
         String[] parts = extractBracketParts(line);
         if (parts == null) {
             return null;
@@ -417,13 +417,13 @@ public class LogbookParser {
         // prefer second then third element if present (as you noted)
         if (parts.length >= 2) {
             String candidate = parts[1].trim();
-            if (isCorrelationId(candidate)) {
+            if (isTraceId(candidate)) {
                 return candidate;
             }
         }
         if (parts.length >= 3) {
             String candidate = parts[2].trim();
-            if (isCorrelationId(candidate)) {
+            if (isTraceId(candidate)) {
                 return candidate;
             }
         }
@@ -431,7 +431,7 @@ public class LogbookParser {
         // fallback: try any part
         for (String p : parts) {
             String candidate = p.trim();
-            if (isCorrelationId(candidate)) {
+            if (isTraceId(candidate)) {
                 return candidate;
             }
         }
@@ -440,16 +440,16 @@ public class LogbookParser {
     }
 
 
-    // Second attempt to extract correlationId from error line
-    // [correlationId        otherId]
+    // Second attempt to extract traceId from error line
+    // [traceId        otherId]
     // use regex correlation id is after "[" and before 2 or more spaces
-    private String extractCorrelationIdFromError2(String content) {
+    private String extractTraceIdFromError2(String content) {
         Matcher matcher = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})").matcher(content);
 
         return matcher.find() ? matcher.group(1) : null;
     }
 
-    private boolean isCorrelationId(String value) {
+    private boolean isTraceId(String value) {
         return value != null && value.matches("[a-fA-F0-9\\-]{8,}"); // basic heuristic, adjust to your ids
     }
 

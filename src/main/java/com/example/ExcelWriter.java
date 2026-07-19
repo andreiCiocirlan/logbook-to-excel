@@ -13,7 +13,7 @@ public class ExcelWriter {
 
     private static final List<String> COLUMNS = List.of(
             "requestId",
-            "correlation-id",
+            "trace-id",
             "timestamp",
             "http_method",
             "endpoint",
@@ -46,7 +46,7 @@ public class ExcelWriter {
                 Row row = sheet.createRow(rowIndex++);
 
                 set(row, 0, record.getRequestId());
-                set(row, 1, record.getCorrelationId());
+                set(row, 1, record.getTraceId());
                 set(row, 2, record.getTimestamp());
                 set(row, 3, record.getHeaders().get("http_method"));
                 set(row, 4, record.getHeaders().get("endpoint"));
