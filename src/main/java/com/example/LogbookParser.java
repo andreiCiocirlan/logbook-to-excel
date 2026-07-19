@@ -61,7 +61,6 @@ public class LogbookParser {
 
             // scan block until next timestamp line
             while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
-                String trimmed = lines.get(i).trim();
                 i++;
 
                 // strip optional "+[" prefix if present
@@ -111,7 +110,6 @@ public class LogbookParser {
             i++;
 
             while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
-                String trimmed = lines.get(i).trim();
                 i++;
 
                 // strip optional "+[" prefix if present
@@ -190,7 +188,6 @@ public class LogbookParser {
             String lastBodyLine = null;
 
             while (i < lines.size() && !isNextTimestampLine(lines.get(i))) {
-                String trimmed = lines.get(i).trim();
                 i++;
 
                 // strip optional "+[" prefix if present
