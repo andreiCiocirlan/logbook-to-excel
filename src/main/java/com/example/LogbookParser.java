@@ -14,8 +14,6 @@ import java.util.regex.Pattern;
 
 public class LogbookParser {
 
-    private static final List<String> HTTP_METHODS = List.of("GET", "POST", "PUT", "DELETE", "PATCH");
-
     // primary mapping: requestId -> traceId
     private final Map<String, String> requestIdToTraceId = new LinkedHashMap<>();
 
@@ -256,14 +254,14 @@ public class LogbookParser {
             record.putHeader("Remote", valueAfterColon(content));
         } else if (content.startsWith("user-agent:")) {
             record.putHeader("user-agent", valueAfterColon(content));
-        } else if (startsWithHttpMethod(content)) {
-            extractHttpMethodAndEndpointAndQuery(record, content);
+        } else {
+            for (String method : List.of("GET", "POST", "PUT", "DELETE", "PATCH")) {
+                if (content.startsWith(method + " ")) {
+                    extractHttpMethodAndEndpointAndQuery(record, content);
+                    break;
+                }
+            }
         }
-    }
-
-    private boolean startsWithHttpMethod(String content) {
-        return HTTP_METHODS.stream()
-                .anyMatch(method -> content.startsWith(method + " "));
     }
 
     private void applyResponseLine(LogbookRecord record, String content) {
