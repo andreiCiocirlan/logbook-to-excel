@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
 public class LogbookParser {
 
     private static final List<String> HTTP_METHODS = List.of("GET", "POST", "PUT", "DELETE", "PATCH");
-    private static final Pattern TRACE_ID_PATTERN = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})");
+    private static final Pattern TRACE_ID_WITH_SPACES_PATTERN = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})");
+    private static final Pattern TRACE_ID = Pattern.compile("[a-fA-F0-9\\-]{8,}");
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}\\.\\d{3}.*");
 
     // primary mapping: requestId -> traceId
@@ -410,13 +411,13 @@ public class LogbookParser {
 
         // [traceId        otherId]
         // use regex trace id is after "[" and before 2 or more spaces
-        Matcher matcher = TRACE_ID_PATTERN.matcher(line);
+        Matcher matcher = TRACE_ID_WITH_SPACES_PATTERN.matcher(line);
         return matcher.find() ? matcher.group(1) : null;
     }
 
 
     private boolean isTraceId(String value) {
-        return value != null && value.matches("[a-fA-F0-9\\-]{8,}"); // basic heuristic, adjust to your ids
+        return value != null && TRACE_ID.matcher(value).matches();
     }
 
     private LogbookRecord getOrCreateByRequestId(String requestId) {
