@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 public class LogbookParser {
 
+    private static final Pattern TRACE_ID_PATTERN = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})");
     // primary mapping: requestId -> traceId
     private final Map<String, String> requestIdToTraceId = new LinkedHashMap<>();
 
@@ -152,10 +153,7 @@ public class LogbookParser {
                 continue;
             }
 
-            String traceId = extractTraceIdFromError(trimmed);
-            if (traceId == null) {
-                traceId = extractTraceIdFromError2(trimmed);
-            }
+            String traceId = extractTraceId(trimmed);
             if (traceId == null || traceId.isEmpty()) {
                 continue;
             }
@@ -389,35 +387,37 @@ public class LogbookParser {
     // Attempt to extract a trace-id from an ERROR line using bracketed parts.
     // Returns the first bracketed part that looks like a trace id (hex-ish) from positions 1 or 2,
     // otherwise returns null.
-    private String extractTraceIdFromError(String line) {
+    private String extractTraceId(String line) {
         String[] parts = extractBracketParts(line);
-        if (parts == null) {
-            return null;
-        }
+        if (parts != null) {
+            // Prefer second then third element
+            if (parts.length >= 2) {
+                String candidate = parts[1].trim();
+                if (isTraceId(candidate)) {
+                    return candidate;
+                }
+            }
 
-        // prefer second then third element if present (as you noted)
-        if (parts.length >= 2) {
-            String candidate = parts[1].trim();
-            if (isTraceId(candidate)) {
-                return candidate;
+            if (parts.length >= 3) {
+                String candidate = parts[2].trim();
+                if (isTraceId(candidate)) {
+                    return candidate;
+                }
+            }
+
+            // Fallback: try any part
+            for (String part : parts) {
+                String candidate = part.trim();
+                if (isTraceId(candidate)) {
+                    return candidate;
+                }
             }
         }
-        if (parts.length >= 3) {
-            String candidate = parts[2].trim();
-            if (isTraceId(candidate)) {
-                return candidate;
-            }
-        }
 
-        // fallback: try any part
-        for (String p : parts) {
-            String candidate = p.trim();
-            if (isTraceId(candidate)) {
-                return candidate;
-            }
-        }
-
-        return null;
+        // [traceId        otherId]
+        // use regex trace id is after "[" and before 2 or more spaces
+        Matcher matcher = TRACE_ID_PATTERN.matcher(line);
+        return matcher.find() ? matcher.group(1) : null;
     }
 
 
