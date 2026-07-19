@@ -30,7 +30,7 @@ public class LogbookParser {
 
         buildRequestIdToTraceId(lines);     // first pass: gather requestId -> traceId
         parseIncomingRequests(lines);             // second pass: populate incoming details per request
-        parseErrors(lines);                       // third pass: attach errors based on correlation id
+        parseErrors(lines);                       // third pass: attach errors based on trace id
         parseOutgoingResponses(lines);            // fourth pass: attach response details per request
 
         // filter out actuator endpoints
@@ -43,7 +43,7 @@ public class LogbookParser {
     }
 
     // --- FIRST PASS -----------------------------------------------------
-    // Find Incoming Request blocks and read correlation-id (if present) to build requestIdToTraceId.
+    // Find Incoming Request blocks and read trace-id (if present) to build requestIdToTraceId.
     private void buildRequestIdToTraceId(List<String> lines) {
         int i = 0;
         while (i < lines.size()) {
@@ -81,7 +81,7 @@ public class LogbookParser {
                     if (!requestId.isEmpty() && !traceId.isEmpty()) {
                         requestIdToTraceId.put(requestId, traceId);
                     }
-                    // we can break because correlation-id appears at most once per request block
+                    // we can break because trace-id appears at most once per request block
                     break;
                 }
             }
@@ -146,7 +146,7 @@ public class LogbookParser {
     }
 
     // --- THIRD PASS -----------------------------------------------------
-    // Parse error lines and attach errors to all requests that map to the correlation id found in the error line.
+    // Parse error lines and attach errors to all requests that map to the trace id found in the error line.
     private void parseErrors(List<String> lines) {
         for (String line : lines) {
             String trimmed = line.trim();
@@ -162,7 +162,7 @@ public class LogbookParser {
                 continue;
             }
 
-            // attach error to every requestId that maps to this correlation id
+            // attach error to every requestId that maps to this trace id
             for (Entry<String, String> e : requestIdToTraceId.entrySet()) {
                 if (traceId.equals(e.getValue())) {
                     LogbookRecord record = recordsByRequestId.get(e.getKey());
@@ -388,8 +388,8 @@ public class LogbookParser {
         return parts.length >= 1 ? parts : null;
     }
 
-    // Attempt to extract a correlation-id from an ERROR line using bracketed parts.
-    // Returns the first bracketed part that looks like a correlation id (hex-ish) from positions 1 or 2,
+    // Attempt to extract a trace-id from an ERROR line using bracketed parts.
+    // Returns the first bracketed part that looks like a trace id (hex-ish) from positions 1 or 2,
     // otherwise returns null.
     private String extractTraceIdFromError(String line) {
         String[] parts = extractBracketParts(line);
@@ -425,7 +425,7 @@ public class LogbookParser {
 
     // Second attempt to extract traceId from error line
     // [traceId        otherId]
-    // use regex correlation id is after "[" and before 2 or more spaces
+    // use regex trace id is after "[" and before 2 or more spaces
     private String extractTraceIdFromError2(String content) {
         Matcher matcher = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})").matcher(content);
 
