@@ -14,7 +14,9 @@ import java.util.regex.Pattern;
 
 public class LogbookParser {
 
+    private static final List<String> HTTP_METHODS = List.of("GET", "POST", "PUT", "DELETE", "PATCH");
     private static final Pattern TRACE_ID_PATTERN = Pattern.compile("\\[([^\\s]+)(?=\\s{2,})");
+
     // primary mapping: requestId -> traceId
     private final Map<String, String> requestIdToTraceId = new LinkedHashMap<>();
 
@@ -244,7 +246,7 @@ public class LogbookParser {
         } else if (content.startsWith("user-agent:")) {
             record.putHeader("user-agent", valueAfterColon(content));
         } else {
-            for (String method : List.of("GET", "POST", "PUT", "DELETE", "PATCH")) {
+            for (String method : HTTP_METHODS) {
                 if (content.startsWith(method + " ")) {
                     extractHttpMethodAndEndpointAndQuery(record, content);
                     break;
@@ -268,7 +270,7 @@ public class LogbookParser {
 
         String method = "";
 
-        for (String candidate : List.of("GET", "POST", "PUT", "DELETE", "PATCH")) {
+        for (String candidate : HTTP_METHODS) {
             if (s.startsWith(candidate + " ")) {
                 method = candidate;
                 s = s.substring(candidate.length()).trim();
