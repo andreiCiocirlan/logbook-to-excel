@@ -272,15 +272,9 @@ public class LogbookParser {
     private void applyResponseLine(LogbookRecord record, String content) {
         if (content.startsWith("Content-Type:")) {
             record.putHeader("Content-Type", valueAfterColon(content));
-            return;
-        }
-
-        if (content.startsWith("Duration:")) {
+        } else if (content.startsWith("Duration:")) {
             record.putHeader("Duration", valueAfterColon(content));
-            return;
-        }
-
-        if (content.startsWith("HTTP/1.1")) {
+        } else if (content.startsWith("HTTP/1.1")) {
             record.putHeader("status", extractStatusCode(content));
         }
     }
