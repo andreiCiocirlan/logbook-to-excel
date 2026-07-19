@@ -289,21 +289,13 @@ public class LogbookParser {
         String s = content.trim();
 
         String method = "";
-        if (s.startsWith("GET ")) {
-            method = "GET";
-            s = s.substring(4).trim();
-        } else if (s.startsWith("POST ")) {
-            method = "POST";
-            s = s.substring(5).trim();
-        } else if (s.startsWith("PUT ")) {
-            method = "PUT";
-            s = s.substring(4).trim();
-        } else if (s.startsWith("DELETE ")) {
-            method = "DELETE";
-            s = s.substring(7).trim();
-        } else if (s.startsWith("PATCH ")) {
-            method = "PATCH";
-            s = s.substring(6).trim();
+
+        for (String candidate : List.of("GET", "POST", "PUT", "DELETE", "PATCH")) {
+            if (s.startsWith(candidate + " ")) {
+                method = candidate;
+                s = s.substring(candidate.length()).trim();
+                break;
+            }
         }
 
         int httpIndex = s.indexOf("HTTP/1.1");
