@@ -11,7 +11,7 @@ public class LogbookRecord {
     private String requestId;
     private String traceId;
     private String timestamp;
-    private final Set<String> errors = new HashSet<>();
+    private final Set<String> errors = new LinkedHashSet<>();
     private final LinkedHashMap<String, String> headers = new LinkedHashMap<>();
 
     public void putHeader(String key, String value) {
