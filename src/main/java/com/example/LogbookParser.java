@@ -2,6 +2,7 @@ package com.example;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -26,21 +27,27 @@ public class LogbookParser {
     private final Map<String, LogbookRecord> recordsByRequestId = new LinkedHashMap<>();
 
     public List<LogbookRecord> parse(Path logFile) throws IOException {
-        List<String> lines = Files.readAllLines(logFile);
+        try {
+            List<String> lines = Files.readAllLines(logFile);
 
-        requestIdToTraceId.clear();
-        recordsByRequestId.clear();
+            requestIdToTraceId.clear();
+            recordsByRequestId.clear();
 
-        buildRequestIdToTraceId(lines);           // first pass: gather requestId -> traceId
-        parseIncomingRequests(lines);             // second pass: populate incoming details per request
-        parseErrors(lines);                       // third pass: attach errors based on trace id
-        parseOutgoingResponses(lines);            // fourth pass: attach response details per request
+            buildRequestIdToTraceId(lines);           // first pass: gather requestId -> traceId
+            parseIncomingRequests(lines);             // second pass: populate incoming details per request
+            parseErrors(lines);                       // third pass: attach errors based on trace id
+            parseOutgoingResponses(lines);            // fourth pass: attach response details per request
 
-        // filter out actuator endpoints
-        recordsByRequestId.entrySet().removeIf(entry -> {
-            String endpoint = entry.getValue().getHeaders().get("endpoint");
-            return endpoint != null && endpoint.contains("actuator/health");
-        });
+            // filter out actuator endpoints
+            recordsByRequestId.entrySet().removeIf(entry -> {
+                String endpoint = entry.getValue().getHeaders().get("endpoint");
+                return endpoint != null && endpoint.contains("actuator/health");
+            });
+        } catch (MalformedInputException e) {
+            throw new RuntimeException("This does not seem to be a log file.", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read the file.", e);
+        }
 
         return new ArrayList<>(recordsByRequestId.values());
     }
