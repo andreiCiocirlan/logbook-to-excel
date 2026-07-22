@@ -90,6 +90,11 @@ public class LogbookParser {
                 }
             }
         }
+
+        // fail-fast if no Logbook requests are found
+        if (requestIdToTraceId.isEmpty()) {
+            throw new RuntimeException("No Logbook requests found.");
+        }
     }
 
     // --- SECOND PASS ----------------------------------------------------
